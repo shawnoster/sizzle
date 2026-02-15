@@ -5,3 +5,6 @@ lib/1password.sh
 # Environment-specific overrides
 .env
 .env.local
+
+# Claude Code local settings
+.claude/settings.local.json
