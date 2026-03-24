@@ -91,6 +91,8 @@ doctor() {
     "fzf:fzf"
     "tmux:tmux"
     "starship:Starship prompt"
+    "aya:Aya CLI"
+    "claude:Claude Code"
   )
 
   for item in "${tools[@]}"; do
@@ -161,3 +163,42 @@ doctor() {
 }
 
 alias dr='doctor'
+
+# dev-up: session startup — sign in, load secrets, verify environment
+dev-up() {
+  echo "🚀 Developer environment startup"
+  echo ""
+
+  # 1Password
+  if command -v op &>/dev/null; then
+    if ! op account list &>/dev/null 2>&1; then
+      echo "🔐 Signing in to 1Password..."
+      op-signin
+    else
+      echo "✅ 1Password already signed in"
+    fi
+    echo "🔑 Loading secrets..."
+    op-load-env
+  else
+    echo "⚠️  1Password CLI not installed — skipping secret loading"
+  fi
+
+  echo ""
+
+  # AWS SSO
+  if command -v aws &>/dev/null; then
+    if aws sts get-caller-identity &>/dev/null 2>&1; then
+      echo "✅ AWS session active ($(aws sts get-caller-identity 2>/dev/null | jq -r '.Account' 2>/dev/null))"
+    else
+      echo "☁️  Refreshing AWS SSO..."
+      aws-login
+    fi
+  fi
+
+  echo ""
+
+  # Health check
+  echo "🩺 Running health check..."
+  echo ""
+  doctor
+}
