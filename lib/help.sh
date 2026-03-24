@@ -37,7 +37,13 @@ project-help
 
 assistant-help
   Assistant launcher shortcuts.
-  Commands: ace
+  Commands: aya
+
+Session Startup:
+----------------
+
+dev-up                   # Sign in, load secrets, verify environment
+dev-commands             # List all available commands
 
 Quick Reference:
 ----------------
@@ -57,10 +63,10 @@ Git shortcuts:
   gwip                     # Quick WIP commit
 
 Build tools:
-  bake                     # Run Makefile targets
-  yak                      # Run npm scripts
-  poet                     # Run poetry scripts
-  ace                      # Jump to ~/guild and launch claude
+  bake                     # Run Makefile targets (fuzzy)
+  yak                      # Run npm scripts (fuzzy)
+  poet                     # Run poetry scripts (fuzzy)
+  aya                      # Jump to ~/guild and launch Claude
 
 Configuration:
 --------------
@@ -81,13 +87,10 @@ Getting Started:
 1. Configure your accounts:
    Edit ~/.dev/config/accounts.sh
 
-2. Sign in to 1Password:
-   op-signin
+2. Run the startup command:
+   dev-up
 
-3. Load secrets:
-   op-load-env
-
-4. Explore individual modules:
+3. Explore individual modules:
    aws-help
    docker-help
    git-help
@@ -103,6 +106,46 @@ EOF
 # Alias for convenience
 alias devhelp='dev-help'
 
+# dev-commands: flat searchable list of all commands
+dev-commands() {
+  cat <<'EOF'
+aws-help             Show AWS command help
+aws-login [profile]  SSO login (fuzzy-selects if no profile given)
+aws-whoami           Show current AWS profile, region, and identity
+awsp                 Fuzzy-switch AWS profile
+aya                  Jump to ~/guild and launch Claude
+bake                 Fuzzy-select and run Makefile targets
+dev-commands         This list
+dev-help             Central help menu
+dev-up               Session startup: sign in, load secrets, verify env
+dex [shell]          Exec into running container
+dlogs                Fuzzy-select container and tail logs
+doctor / dr          Full environment health check
+dprune               Safe Docker cleanup
+dprune-all           Aggressive Docker cleanup (with volumes)
+drm                  Fuzzy-select and remove containers
+drmi                 Fuzzy-select and remove images
+dstop                Fuzzy-select and stop containers
+gclean [main]        Remove merged branches locally
+gco                  Fuzzy checkout branch
+glog                 Interactive git log with preview
+gpr                  Create pull request via GitHub CLI
+gstash               Fuzzy select and apply stash
+gsync [main]         Sync fork with upstream
+gunwip               Undo last WIP commit
+gwip [msg]           Quick work-in-progress commit
+op-clear-env         Clear all sensitive environment variables
+op-help              Show 1Password command help
+op-load-env          Load secrets from 1Password into env vars
+op-signin [account]  Sign in to 1Password
+op-status            Check 1Password sign-in status
+poet                 Fuzzy-select and run poetry scripts
+proj                 Fuzzy jump to project directory
+serve [port]         Quick Python HTTP server (default: 8000)
+yak                  Fuzzy-select and run npm scripts
+EOF
+}
+
 assistant-help() {
   cat <<'EOF'
 Assistant Launcher Utilities
@@ -111,12 +154,12 @@ Assistant Launcher Utilities
 Available Commands:
 -------------------
 
-ace
+aya
   Jump to ~/guild and launch Claude CLI.
   Equivalent to: cd ~/guild && claude
 
 Usage:
-  ace
+  aya
 
 EOF
 }

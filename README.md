@@ -22,7 +22,7 @@ source ~/.bashrc
 ├── init.sh              # Main loader
 ├── lib/
 │   ├── 1password.sh     # 1Password CLI utilities
-│   ├── assistant.sh     # Claude launcher (ace)
+│   ├── assistant.sh     # Claude launcher (aya)
 │   ├── aws.sh           # AWS profile management
 │   ├── docker.sh        # Docker utilities
 │   ├── doctor.sh        # Environment health check (doctor / dr)
@@ -39,19 +39,21 @@ source ~/.bashrc
 
 | Command | Description |
 |---------|-------------|
-| `ace` | `cd ~/guild && claude` — canonical AI assistant launch |
+| `aya` | `cd ~/guild && claude` — canonical AI assistant launch |
 
 ### Environment Health (`lib/doctor.sh`)
 
 | Command | Description |
 |---------|-------------|
 | `doctor` / `dr` | Full environment health check: tokens, SSH, AWS, installed tools |
+| `dev-up` | Session startup: sign in to 1Password, load secrets, refresh AWS, run doctor |
 
 ### Help (`lib/help.sh`)
 
 | Command | Description |
 |---------|-------------|
 | `dev-help` / `devhelp` | Unified help menu for all modules |
+| `dev-commands` | Flat searchable list of all commands |
 | `assistant-help` | Help for assistant commands |
 | `aws-help` | Help for AWS commands |
 | `docker-help` | Help for Docker commands |
