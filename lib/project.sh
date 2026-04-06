@@ -61,7 +61,7 @@ bake() {
   local target="${1:-}"
 
   if [[ -z "$target" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: bake <target>" >&2
       return 1
     fi
@@ -94,7 +94,7 @@ yak() {
   local script="${1:-}"
 
   if [[ -z "$script" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: yak <script>" >&2
       return 1
     fi
@@ -120,7 +120,7 @@ poet() {
   local script="${1:-}"
 
   if [[ -z "$script" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: poet <script>" >&2
       return 1
     fi
@@ -157,7 +157,7 @@ proj() {
   local selected="${1:-}"
 
   if [[ -z "$selected" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: proj <directory>" >&2
       return 1
     fi

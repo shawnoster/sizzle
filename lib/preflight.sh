@@ -37,8 +37,10 @@ preflight() {
   echo "--- AWS Session ---"
 
   if command -v aws &>/dev/null; then
-    if aws sts get-caller-identity &>/dev/null 2>&1; then
-      echo "✅ AWS session active ($(aws sts get-caller-identity 2>/dev/null | jq -r '.Account' 2>/dev/null))"
+    local aws_identity
+    aws_identity=$(aws sts get-caller-identity 2>/dev/null)
+    if [[ -n "$aws_identity" ]]; then
+      echo "✅ AWS session active ($(echo "$aws_identity" | jq -r '.Account' 2>/dev/null))"
     else
       echo "☁️  Refreshing AWS SSO..."
       aws-login

@@ -63,7 +63,7 @@ gco() {
   local branch="${1:-}"
 
   if [[ -z "$branch" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: gco <branch>" >&2
       return 1
     fi
@@ -75,7 +75,7 @@ gco() {
 
 # glog: pretty git log with fzf preview
 glog() {
-  if [[ ! -t 1 ]]; then
+  if [[ ! -t 0 ]]; then
     git log --oneline
     return
   fi
@@ -87,7 +87,7 @@ gstash() {
   local stash="${1:-}"
 
   if [[ -z "$stash" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: gstash <stash-ref>" >&2
       return 1
     fi

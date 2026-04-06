@@ -60,7 +60,7 @@ dex() {
   local shell="${2:-/bin/sh}"
 
   if [[ -z "$container" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: dex <container> [shell]" >&2
       return 1
     fi
@@ -75,7 +75,7 @@ dlogs() {
   local container="${1:-}"
 
   if [[ -z "$container" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: dlogs <container>" >&2
       return 1
     fi
@@ -92,7 +92,7 @@ dstop() {
     return
   fi
 
-  if [[ ! -t 1 ]]; then
+  if [[ ! -t 0 ]]; then
     echo "Usage: dstop <container...>" >&2
     return 1
   fi
@@ -109,7 +109,7 @@ drm() {
     return
   fi
 
-  if [[ ! -t 1 ]]; then
+  if [[ ! -t 0 ]]; then
     echo "Usage: drm <container...>" >&2
     return 1
   fi
@@ -126,7 +126,7 @@ drmi() {
     return
   fi
 
-  if [[ ! -t 1 ]]; then
+  if [[ ! -t 0 ]]; then
     echo "Usage: drmi <image...>" >&2
     return 1
   fi

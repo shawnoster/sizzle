@@ -46,7 +46,7 @@ switch-aws-profile() {
   local profile="${1:-}"
 
   if [[ -z "$profile" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: awsp <profile>" >&2
       return 1
     fi
@@ -83,7 +83,7 @@ aws-login() {
   local profile="${1:-$AWS_PROFILE}"
 
   if [[ -z "$profile" ]]; then
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       echo "Usage: aws-login <profile>" >&2
       return 1
     fi
