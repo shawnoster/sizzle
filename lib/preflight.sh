@@ -137,22 +137,25 @@ preflight() {
   local tmpdir=""
   if [[ "$check_updates" == true ]] && command -v gh &>/dev/null; then
     tmpdir=$(mktemp -d)
-    gh api repos/aws/aws-sam-cli/releases/latest \
-      --jq '.tag_name | ltrimstr("v")' >"$tmpdir/sam" 2>/dev/null &
-    gh api repos/moby/moby/releases/latest \
-      --jq '.tag_name | ltrimstr("docker-v")' >"$tmpdir/docker" 2>/dev/null &
-    gh api repos/hashicorp/terraform/releases/latest \
-      --jq '.tag_name | ltrimstr("v")' >"$tmpdir/terraform" 2>/dev/null &
-    gh api repos/cli/cli/releases/latest \
-      --jq '.tag_name | ltrimstr("v")' >"$tmpdir/gh" 2>/dev/null &
-    gh api repos/jqlang/jq/releases/latest \
-      --jq '.tag_name | ltrimstr("jq-")' >"$tmpdir/jq" 2>/dev/null &
-    gh api repos/junegunn/fzf/releases/latest \
-      --jq '.tag_name | ltrimstr("v")' >"$tmpdir/fzf" 2>/dev/null &
-    gh api repos/tmux/tmux/releases/latest \
-      --jq '.tag_name' >"$tmpdir/tmux" 2>/dev/null &
-    npm view @anthropic-ai/claude-code version >"$tmpdir/claude" 2>/dev/null &
-    wait
+    # Run in subshell to suppress interactive job control notifications ([N] PID)
+    (
+      gh api repos/aws/aws-sam-cli/releases/latest \
+        --jq '.tag_name | ltrimstr("v")' >"$tmpdir/sam" 2>/dev/null &
+      gh api repos/moby/moby/releases/latest \
+        --jq '.tag_name | ltrimstr("docker-v")' >"$tmpdir/docker" 2>/dev/null &
+      gh api repos/hashicorp/terraform/releases/latest \
+        --jq '.tag_name | ltrimstr("v")' >"$tmpdir/terraform" 2>/dev/null &
+      gh api repos/cli/cli/releases/latest \
+        --jq '.tag_name | ltrimstr("v")' >"$tmpdir/gh" 2>/dev/null &
+      gh api repos/jqlang/jq/releases/latest \
+        --jq '.tag_name | ltrimstr("jq-")' >"$tmpdir/jq" 2>/dev/null &
+      gh api repos/junegunn/fzf/releases/latest \
+        --jq '.tag_name | ltrimstr("v")' >"$tmpdir/fzf" 2>/dev/null &
+      gh api repos/tmux/tmux/releases/latest \
+        --jq '.tag_name' >"$tmpdir/tmux" 2>/dev/null &
+      npm view @anthropic-ai/claude-code version >"$tmpdir/claude" 2>/dev/null &
+      wait
+    )
   fi
 
   _pf_tool() {
