@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/config/accounts.sh - Non-secret configuration
+# ~/.preflight/config/accounts.sh - Non-secret configuration
 #
 # This file contains account identifiers and configuration.
 # Do NOT put secrets here - use 1Password for those.
