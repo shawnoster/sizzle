@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/help.sh - Central help system
+# ~/.preflight/lib/help.sh - Central help system
 
 dev-help() {
   cat <<'EOF'
@@ -61,21 +61,21 @@ Build tools:
 Configuration:
 --------------
 
-Location: ~/.dev/
-Config:   ~/.dev/config/accounts.sh
-Modules:  ~/.dev/lib/*.sh
+Location: ~/.preflight/
+Config:   ~/.preflight/config/accounts.sh
+Modules:  ~/.preflight/lib/*.sh
 
 Environment Variables:
   OP_ACCOUNT    - 1Password account shorthand
   AWS_PROFILE   - Default AWS profile
   PROJ_DIRS     - Project directories for 'proj' command
-  DEV_VERBOSE   - Set to "1" for verbose loading messages
+  PREFLIGHT_VERBOSE   - Set to "1" for verbose loading messages
 
 Getting Started:
 ----------------
 
 1. Configure your accounts:
-   Edit ~/.dev/config/accounts.sh
+   Edit ~/.preflight/config/accounts.sh
 
 2. Run preflight to start your session:
    preflight

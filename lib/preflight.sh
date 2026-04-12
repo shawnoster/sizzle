@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/preflight.sh - Session startup and environment health check
+# ~/.preflight/lib/preflight.sh - Session startup and environment health check
 #
 # Usage:
 #   preflight       - sign in, load secrets, refresh AWS, run health checks

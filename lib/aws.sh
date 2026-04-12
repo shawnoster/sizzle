@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/aws.sh - AWS CLI utilities
+# ~/.preflight/lib/aws.sh - AWS CLI utilities
 #
 # Requires: aws cli, fzf
 

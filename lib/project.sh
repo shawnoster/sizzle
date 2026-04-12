@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/project.sh - Project navigation and build utilities
+# ~/.preflight/lib/project.sh - Project navigation and build utilities
 #
 # Requires: fzf, jq
 

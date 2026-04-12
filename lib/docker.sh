@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/docker.sh - Docker utilities
+# ~/.preflight/lib/docker.sh - Docker utilities
 #
 # Requires: docker, fzf
 

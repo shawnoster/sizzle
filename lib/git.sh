@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ~/.dev/lib/git.sh - Git utilities and shortcuts
+# ~/.preflight/lib/git.sh - Git utilities and shortcuts
 #
 # Requires: git, fzf
 

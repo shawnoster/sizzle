@@ -1,22 +1,22 @@
-# Sizzle — Developer Environment Scripts
+# Preflight — Developer Environment Scripts
 
-A modular collection of shell utilities for development workflows. Drop it in `~/.dev`, source it from `.bashrc`, and get fuzzy-powered shortcuts for AWS, Docker, Git, 1Password, and project navigation.
+A modular collection of shell utilities for development workflows. Drop it in `~/.preflight`, source it from `.bashrc`, and get fuzzy-powered shortcuts for AWS, Docker, Git, 1Password, and project navigation.
 
 ## Getting Started
 
 ```bash
 # 1. Clone to home directory
-git clone git@github.com:shawnoster/sizzle.git ~/.dev
+git clone git@github.com:shawnoster/preflight.git ~/.preflight
 
 # 2. Add to your .bashrc (near the end)
-echo '[[ -f "$HOME/.dev/init.sh" ]] && source "$HOME/.dev/init.sh"' >> ~/.bashrc
+echo '[[ -f "$HOME/.preflight/init.sh" ]] && source "$HOME/.preflight/init.sh"' >> ~/.bashrc
 
 # 3. Reload your shell
 source ~/.bashrc
 
 # 4. Configure your accounts
-cp ~/.dev/config/accounts.sh.template ~/.dev/config/accounts.sh
-cp ~/.dev/lib/1password.sh.template ~/.dev/lib/1password.sh
+cp ~/.preflight/config/accounts.sh.template ~/.preflight/config/accounts.sh
+cp ~/.preflight/lib/1password.sh.template ~/.preflight/lib/1password.sh
 # Edit both files with your settings
 
 # 5. Run preflight to start your session
@@ -29,14 +29,14 @@ Use `dev-commands` to see everything available, or `dev-help` for the full menu.
 
 ```bash
 cp -r .dev ~/
-echo '[[ -f "$HOME/.dev/init.sh" ]] && source "$HOME/.dev/init.sh"' >> ~/.bashrc
+echo '[[ -f "$HOME/.preflight/init.sh" ]] && source "$HOME/.preflight/init.sh"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
 ## Structure
 
 ```
-~/.dev/
+~/.preflight/
 ├── init.sh              # Main loader
 ├── lib/
 │   ├── 1password.sh     # 1Password CLI utilities
@@ -143,7 +143,7 @@ Commands that require interactive selection will exit with a usage message when 
 
 ## Configuration
 
-Edit `~/.dev/config/accounts.sh` to customize:
+Edit `~/.preflight/config/accounts.sh` to customize:
 
 - `OP_ACCOUNT` - 1Password account shorthand
 - `PROJ_DIRS` - Directories for `proj` command
@@ -151,7 +151,7 @@ Edit `~/.dev/config/accounts.sh` to customize:
 
 ## Adding Custom Scripts
 
-Files in `~/.dev/lib/` are automatically sourced. Create `~/.dev/lib/custom.sh` for local additions.
+Files in `~/.preflight/lib/` are automatically sourced. Create `~/.preflight/lib/custom.sh` for local additions.
 
 ## Dependencies
 
