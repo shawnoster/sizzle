@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""nanoleaf-streak — fire a streak (or wave, or fill-from-ends) across the
+office Nanoleaf panels using the controller's local API.
+
+Reads token from $NANOLEAF_TOKEN first, then ~/.config/nanoleaf-direct/env,
+then ~/.config/nanoleaf-direct/token.json. Layout is cached at
+~/.config/nanoleaf-direct/layout.json (refreshed on cache miss).
+
+This script only fires the effect — it does not snapshot or restore.
+Callers (light-remind, etc.) handle the lifecycle.
+
+Usage:
+  nanoleaf-streak                                 # amber l→r, 1.5s
+  nanoleaf-streak --color red --duration 1.0
+  nanoleaf-streak --direction r2l
+  nanoleaf-streak --direction in                  # ends → middle
+  nanoleaf-streak --direction out                 # middle → ends
+  nanoleaf-streak --color 100,200,255             # raw RGB
+
+Tones:
+  red, amber, green, blue, white, purple — or "r,g,b" with values 0-255
+"""
+
+import argparse
+import json
+import os
+import pathlib
+import sys
+import urllib.error
+import urllib.request
+
+CTRL_HOST = "192.168.50.31"
+CTRL_PORT = 16021
+CFG_DIR = pathlib.Path.home() / ".config/nanoleaf-direct"
+LAYOUT_CACHE = CFG_DIR / "layout.json"
+TOKEN_JSON = CFG_DIR / "token.json"
+ENV_FILE = CFG_DIR / "env"
+
+NAMED_COLORS = {
+    "red":    (255,   0,   0),
+    "amber":  (255, 140,   0),
+    "green":  (  0, 200,  80),
+    "blue":   ( 40, 120, 255),
+    "white":  (255, 255, 255),
+    "purple": (160,  80, 255),
+}
+
+
+def load_token():
+    t = os.environ.get("NANOLEAF_TOKEN")
+    if t:
+        return t
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text().splitlines():
+            if line.startswith("NANOLEAF_TOKEN="):
+                return line.split("=", 1)[1].strip()
+    if TOKEN_JSON.exists():
+        return json.loads(TOKEN_JSON.read_text())["auth_token"]
+    sys.exit("nanoleaf-streak: no token (set $NANOLEAF_TOKEN or "
+             f"populate {TOKEN_JSON})")
+
+
+def http(method, path, body=None, timeout=5):
+    url = f"http://{CTRL_HOST}:{CTRL_PORT}{path}"
+    data = json.dumps(body).encode() if body is not None else None
+    headers = {"Content-Type": "application/json"} if body is not None else {}
+    req = urllib.request.Request(url, method=method, data=data, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode()
+
+
+def get_layout(token):
+    if LAYOUT_CACHE.exists():
+        return json.loads(LAYOUT_CACHE.read_text())
+    raw = http("GET", f"/api/v1/{token}/panelLayout/layout")
+    CFG_DIR.mkdir(parents=True, exist_ok=True)
+    LAYOUT_CACHE.write_text(raw)
+    return json.loads(raw)
+
+
+def parse_color(s):
+    if s in NAMED_COLORS:
+        return NAMED_COLORS[s]
+    parts = s.split(",")
+    if len(parts) != 3:
+        sys.exit(f"nanoleaf-streak: --color must be a name "
+                 f"({'/'.join(NAMED_COLORS)}) or 'r,g,b'")
+    try:
+        rgb = tuple(int(p.strip()) for p in parts)
+    except ValueError:
+        sys.exit(f"nanoleaf-streak: invalid RGB: {s!r}")
+    if not all(0 <= c <= 255 for c in rgb):
+        sys.exit("nanoleaf-streak: RGB values must be 0-255")
+    return rgb
+
+
+def panel_order(layout, direction):
+    panels = sorted(layout["positionData"], key=lambda p: p["x"])
+    ids = [p["panelId"] for p in panels]
+    n = len(ids)
+    if direction == "l2r":
+        return ids
+    if direction == "r2l":
+        return list(reversed(ids))
+    if direction == "in":  # ends fire first, converging toward middle
+        order = []
+        i, j = 0, n - 1
+        while i < j:
+            order += [ids[i], ids[j]]
+            i += 1; j -= 1
+        if i == j:
+            order.append(ids[i])
+        return order
+    if direction == "out":  # middle fires first, expanding toward ends
+        mid = n // 2
+        order = [ids[mid]]
+        for d in range(1, mid + 1):
+            if mid - d >= 0:
+                order.append(ids[mid - d])
+            if mid + d < n:
+                order.append(ids[mid + d])
+        return order
+    sys.exit(f"nanoleaf-streak: unknown direction: {direction}")
+
+
+def build_animdata(panel_ids, rgb, duration_s):
+    """Build v2 animData. Each panel: 5 frames — dark, wait, fade in,
+    hold, fade out. Stagger by panel order so the lit moment moves
+    across the array linearly.
+    """
+    r, g, b = rgb
+    n = len(panel_ids)
+    # Total animation time in deciseconds (1 dc = 100ms)
+    total_dc = max(int(round(duration_s * 10)), n + 3)
+    # Each panel's lit moment = 3 dc (fade in 1 + hold 1 + fade out 1).
+    # Wait time before lighting up = stagger * panel_index.
+    # Last panel finishes at total_dc, so wait_max + 3 = total_dc.
+    wait_max = total_dc - 3
+
+    parts = [str(n)]
+    for i, pid in enumerate(panel_ids):
+        wait = int(round(wait_max * i / (n - 1))) if n > 1 else 0
+        wait = max(wait, 1)  # 0 not always honored
+        parts += [str(pid), "5"]
+        parts += ["0", "0", "0", "0", "0"]                # F0 — initial dark
+        parts += ["0", "0", "0", "0", str(wait)]          # F1 — wait dark
+        parts += [str(r), str(g), str(b), "0", "1"]       # F2 — fade in
+        parts += [str(r), str(g), str(b), "0", "1"]       # F3 — hold lit
+        parts += ["0", "0", "0", "0", "1"]                # F4 — fade out
+    return " ".join(parts)
+
+
+def fire_streak(token, rgb, duration_s, direction):
+    layout = get_layout(token)
+    order = panel_order(layout, direction)
+    animdata = build_animdata(order, rgb, duration_s)
+    body = {
+        "write": {
+            "command": "display",
+            "version": "2.0",
+            "animType": "custom",
+            "animData": animdata,
+            "loop": False,
+            "palette": [],
+        }
+    }
+    try:
+        http("PUT", f"/api/v1/{token}/effects", body)
+    except urllib.error.HTTPError as e:
+        sys.exit(f"nanoleaf-streak: HTTP {e.code} from controller — "
+                 f"token may be invalid")
+
+
+def main():
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("--color", default="amber")
+    p.add_argument("--duration", type=float, default=1.5,
+                   help="total streak time, seconds")
+    p.add_argument("--direction", default="l2r",
+                   choices=("l2r", "r2l", "in", "out"))
+    args = p.parse_args()
+
+    token = load_token()
+    rgb = parse_color(args.color)
+    fire_streak(token, rgb, args.duration, args.direction)
+
+
+if __name__ == "__main__":
+    main()
