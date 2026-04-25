@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""light-remind — visual reminder via the office light panels.
+
+Snapshots current panel state, applies an attention "tone", waits,
+then restores. Intended for meeting nudges, scheduled prompts, and
+low-friction notifications from cron / aya / anything.
+
+Usage:
+  light-remind                         # default: heads-up amber, 3s
+  light-remind --tone urgent           # red, 3s
+  light-remind --tone note             # green, 3s
+  light-remind --tone done             # blue, 3s
+  light-remind --tone streak           # Streaking Notes effect, 4s
+  light-remind --tone streak-pan       # per-panel l→r streak (direct API)
+  light-remind --duration 5 --tone heads-up
+
+Tones (HA whole-array):
+  urgent     red     3s   meeting NOW, interrupt-grade
+  heads-up   amber   3s   meeting in 5, pomodoro break (default)
+  note       green   3s   low-priority ping (smooth fade)
+  done       blue    3s   task complete, PR merged
+  streak     effect  4s   Streaking Notes — message arrived (HA effect)
+
+Tones (per-panel via Nanoleaf direct API):
+  streak-pan amber l→r 1.5s — true panel-by-panel streak
+  kitt-pan   red bouncing dot with comet trail, 5s
+                              both require NANOLEAF_TOKEN or token file
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+import time
+
+ENTITY = "light.light_panels"
+
+TONES = {
+    # HA whole-array tones — apply via light.turn_on
+    "urgent":     {"_apply": "ha", "_dur": 3, "rgb_color": [255, 0, 0],    "brightness": 255},
+    "heads-up":   {"_apply": "ha", "_dur": 3, "rgb_color": [255, 140, 0],  "brightness": 255},
+    "note":       {"_apply": "ha", "_dur": 3, "rgb_color": [0, 200, 80],   "brightness": 200, "transition": 1},
+    "done":       {"_apply": "ha", "_dur": 3, "rgb_color": [40, 120, 255], "brightness": 220},
+    "streak":     {"_apply": "ha", "_dur": 4, "effect": "Streaking Notes"},
+    # Per-panel tones — apply via direct Nanoleaf API
+    "streak-pan": {"_apply": "streak", "_dur": 1.5, "color": "amber", "direction": "l2r"},
+    "kitt-pan":   {"_apply": "kitt",   "_dur": 5,   "color": "red",   "period": 1.8, "trail": 4},
+}
+
+
+def ha(endpoint, *args):
+    return subprocess.run(
+        ["ha", endpoint, *args], capture_output=True, text=True, check=False
+    )
+
+
+def snapshot(entity):
+    r = ha(f"/api/states/{entity}")
+    if not r.stdout.strip():
+        sys.exit(f"light-remind: no response for {entity}")
+    s = json.loads(r.stdout)
+    a = s.get("attributes", {})
+    return {
+        "state": s["state"],
+        "brightness": a.get("brightness"),
+        "hs_color": a.get("hs_color"),
+        "kelvin": a.get("color_temp_kelvin"),
+        "effect": a.get("effect"),
+    }
+
+
+def turn_on(entity, payload):
+    payload = {**payload, "entity_id": entity}
+    ha("/api/services/light/turn_on", "-X", "POST", "-d", json.dumps(payload))
+
+
+def turn_off(entity):
+    ha("/api/services/light/turn_off", "-X", "POST", "-d",
+       json.dumps({"entity_id": entity}))
+
+
+def restore(entity, saved):
+    if saved["state"] == "off":
+        turn_off(entity)
+        return
+    payload = {k: v for k, v in saved.items() if k != "state" and v is not None}
+    if payload:
+        turn_on(entity, payload)
+
+
+def apply_streak(tone, duration):
+    subprocess.run(
+        ["nanoleaf-streak",
+         "--color", tone["color"],
+         "--duration", str(duration),
+         "--direction", tone["direction"]],
+        check=False,
+    )
+
+
+def apply_kitt(tone, duration):
+    subprocess.run(
+        ["nanoleaf-kitt",
+         "--color", tone["color"],
+         "--period", str(tone["period"]),
+         "--trail", str(tone["trail"])],
+        check=False,
+    )
+
+
+def main():
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("--tone", default="heads-up", choices=sorted(TONES),
+                   help="attention tone (default: heads-up)")
+    p.add_argument("--duration", type=float,
+                   help="override the tone's default duration (seconds)")
+    p.add_argument("--entity", default=ENTITY,
+                   help=f"light entity (default: {ENTITY})")
+    args = p.parse_args()
+
+    tone = dict(TONES[args.tone])
+    apply_kind = tone.pop("_apply", "ha")
+    duration = args.duration if args.duration is not None else tone.pop("_dur")
+    tone.pop("_dur", None)
+
+    saved = snapshot(args.entity)
+    if apply_kind == "ha":
+        turn_on(args.entity, tone)
+    elif apply_kind == "streak":
+        apply_streak(tone, duration)
+    elif apply_kind == "kitt":
+        apply_kitt(tone, duration)
+    else:
+        sys.exit(f"light-remind: unknown _apply: {apply_kind}")
+    try:
+        time.sleep(duration)
+    finally:
+        restore(args.entity, saved)
+
+
+if __name__ == "__main__":
+    main()

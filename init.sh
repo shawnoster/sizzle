@@ -7,6 +7,13 @@
 
 PREFLIGHT_DIR="${PREFLIGHT_DIR:-$HOME/.preflight}"
 
+# Add bin/ to PATH so distributed scripts (light-remind, nanoleaf-*) are
+# findable. Idempotent — safe to source multiple times.
+case ":$PATH:" in
+  *":$PREFLIGHT_DIR/bin:"*) ;;
+  *) PATH="$PREFLIGHT_DIR/bin:$PATH" ;;
+esac
+
 # First-time setup: Copy templates if config files don't exist
 if [[ ! -f "$PREFLIGHT_DIR/config/accounts.sh" ]] && [[ -f "$PREFLIGHT_DIR/config/accounts.sh.template" ]]; then
   echo "📋 Creating config/accounts.sh from template..."

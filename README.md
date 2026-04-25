@@ -37,7 +37,11 @@ source ~/.bashrc
 
 ```
 ~/.preflight/
-├── init.sh              # Main loader
+├── init.sh              # Main loader (also adds bin/ to PATH)
+├── bin/                 # Distributed scripts (auto on PATH)
+│   ├── light-remind     # Visual reminder (snapshot/flash/restore)
+│   ├── nanoleaf-streak  # Per-panel streak via Nanoleaf direct API
+│   └── nanoleaf-kitt    # KITT-style scanner with comet trail
 ├── lib/
 │   ├── 1password.sh     # 1Password CLI utilities
 │   ├── aws.sh           # AWS profile management
@@ -99,6 +103,35 @@ op account add --shorthand guild_education
 | `poet [script]` | Fuzzy-select poetry script |
 | `proj [directory]` | Jump to project directory |
 | `serve [port]` | Quick Python HTTP server (default: 8000) |
+
+### Office Light Reminders (`bin/`)
+
+Visual reminders driven through Home Assistant + Nanoleaf Light Panels.
+`light-remind` shells out to a local `ha` CLI helper for HA REST API
+calls (the helper reads its bearer token from `~/.claude.json`'s MCP
+server config — populated when you run `claude mcp add ha …`). The
+`nanoleaf-*` scripts read `NANOLEAF_TOKEN` from the environment first
+(set by `op-load-env`), falling back to `~/.config/nanoleaf-direct/env`
+(populated by `op-load-env` for cron) and finally
+`~/.config/nanoleaf-direct/token.json` (offline backup).
+
+| Command | Description |
+|---------|-------------|
+| `light-remind` | Snapshot panels → apply tone → restore. Default tone: `heads-up` (amber, 3s). Tones: `urgent`, `heads-up`, `note`, `done`, `streak`, `streak-pan`, `kitt-pan` |
+| `nanoleaf-streak` | Direct Nanoleaf API: per-panel rolling color (`l2r`/`r2l`/`in`/`out`) for ~1.5s. Fire-and-forget |
+| `nanoleaf-kitt` | Direct Nanoleaf API: KITT scanner — bouncing dot with comet trail. Loops until panel state is changed externally |
+
+Examples:
+```bash
+light-remind                              # default heads-up amber
+light-remind --tone urgent                # red flash
+light-remind --tone kitt-pan              # 5s of KITT then restore
+nanoleaf-kitt --color blue --period 1.4   # blue scanner, faster
+nanoleaf-streak --direction in --color red  # red converging from ends
+```
+
+See the `nanoleaf-direct` project notebook for the auth/layout/effects
+references.
 
 ### Git (`lib/git.sh`)
 
