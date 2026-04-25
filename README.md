@@ -107,9 +107,13 @@ op account add --shorthand guild_education
 ### Office Light Reminders (`bin/`)
 
 Visual reminders driven through Home Assistant + Nanoleaf Light Panels.
-Reads `HA_TOKEN` from 1Password (auto-loaded by `op-load-env`); the
-`nanoleaf-*` scripts also need `NANOLEAF_TOKEN` (or a fallback at
-`~/.config/nanoleaf-direct/token.json`).
+`light-remind` shells out to a local `ha` CLI helper for HA REST API
+calls (the helper reads its bearer token from `~/.claude.json`'s MCP
+server config — populated when you run `claude mcp add ha …`). The
+`nanoleaf-*` scripts read `NANOLEAF_TOKEN` from the environment first
+(set by `op-load-env`), falling back to `~/.config/nanoleaf-direct/env`
+(populated by `op-load-env` for cron) and finally
+`~/.config/nanoleaf-direct/token.json` (offline backup).
 
 | Command | Description |
 |---------|-------------|
